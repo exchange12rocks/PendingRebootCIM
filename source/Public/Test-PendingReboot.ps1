@@ -128,7 +128,11 @@ function Test-PendingReboot
 
         [Parameter()]
         [Switch]
-        $SkipPendingFileRenameOperationsCheck
+        $SkipPendingFileRenameOperationsCheck,
+
+        [Parameter()]
+        [Switch]
+        $Wmi
     )
 
     process
@@ -144,6 +148,10 @@ function Test-PendingReboot
                     ComputerName = $computer
                     ErrorAction  = 'Stop'
                 }
+                $getCimWmiDataParameters = @{
+                    Wmi                        = $Wmi
+                    invokeWmiMethodParameters = $invokeWmiMethodParameters
+                }
 
                 $hklm = [UInt32] "0x80000002"
 
@@ -154,32 +162,37 @@ function Test-PendingReboot
 
                 ## Query the Component Based Servicing Reg Key
                 $invokeWmiMethodParameters.ArgumentList = @($hklm, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\')
-                $registryComponentBasedServicing = (Invoke-WmiMethod @invokeWmiMethodParameters).sNames -contains 'RebootPending'
+                $invokeResult = Get-CimWmiData @getCimWmiDataParameters
+                $registryComponentBasedServicing = $invokeResult.sNames -contains 'RebootPending'
 
                 ## Query WUAU from the registry
                 $invokeWmiMethodParameters.ArgumentList = @($hklm, 'SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\')
-                $registryWindowsUpdateAutoUpdate = (Invoke-WmiMethod @invokeWmiMethodParameters).sNames -contains 'RebootRequired'
+                $invokeResult = Get-CimWmiData @getCimWmiDataParameters
+                $registryWindowsUpdateAutoUpdate = $invokeResult.sNames -contains 'RebootRequired'
 
                 ## Query JoinDomain key from the registry - These keys are present if pending a reboot from a domain join operation
                 $invokeWmiMethodParameters.ArgumentList = @($hklm, 'SYSTEM\CurrentControlSet\Services\Netlogon')
-                $registryNetlogon = (Invoke-WmiMethod @invokeWmiMethodParameters).sNames
+                $invokeResult = Get-CimWmiData @getCimWmiDataParameters
+                $registryNetlogon = $invokeResult.sNames
                 $pendingDomainJoin = ($registryNetlogon -contains 'JoinDomain') -or ($registryNetlogon -contains 'AvoidSpnSet')
 
                 ## Query ComputerName and ActiveComputerName from the registry and setting the MethodName to GetMultiStringValue
-                $invokeWmiMethodParameters.Name = 'GetMultiStringValue'
+                $invokeWmiMethodParameters.Name = 'GetStringValue'
                 $invokeWmiMethodParameters.ArgumentList = @($hklm, 'SYSTEM\CurrentControlSet\Control\ComputerName\ActiveComputerName\', 'ComputerName')
-                $registryActiveComputerName = Invoke-WmiMethod @invokeWmiMethodParameters
+                $registryActiveComputerName = Get-CimWmiData @getCimWmiDataParameters
 
                 $invokeWmiMethodParameters.ArgumentList = @($hklm, 'SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName\', 'ComputerName')
-                $registryComputerName = Invoke-WmiMethod @invokeWmiMethodParameters
+                $registryComputerName = Get-CimWmiData @getCimWmiDataParameters
 
                 $pendingComputerRename = $registryActiveComputerName -ne $registryComputerName -or $pendingDomainJoin
 
                 ## Query PendingFileRenameOperations from the registry
                 if (-not $PSBoundParameters.ContainsKey('SkipPendingFileRenameOperationsCheck'))
                 {
+                    $invokeWmiMethodParameters.Name = 'GetMultiStringValue'
                     $invokeWmiMethodParameters.ArgumentList = @($hklm, 'SYSTEM\CurrentControlSet\Control\Session Manager\', 'PendingFileRenameOperations')
-                    $registryPendingFileRenameOperations = (Invoke-WmiMethod @invokeWmiMethodParameters).sValue
+                    $invokeResult = Get-CimWmiData @getCimWmiDataParameters
+                    $registryPendingFileRenameOperations = $invokeResult.sValue
                     $registryPendingFileRenameOperationsBool = [bool]$registryPendingFileRenameOperations
                 }
 
@@ -193,7 +206,7 @@ function Test-PendingReboot
 
                     try
                     {
-                        $sccmClientSDK = Invoke-WmiMethod @invokeWmiMethodParameters
+                        $sccmClientSDK = Get-CimWmiData @getCimWmiDataParameters
                         $systemCenterConfigManager = $sccmClientSDK.ReturnValue -eq 0 -and ($sccmClientSDK.IsHardRebootPending -or $sccmClientSDK.RebootPending)
                     }
                     catch
