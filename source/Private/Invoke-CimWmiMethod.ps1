@@ -1,4 +1,4 @@
-function Get-CimWmiData {
+function Invoke-CimWmiMethod {
     [CmdletBinding()]
     param
     (
