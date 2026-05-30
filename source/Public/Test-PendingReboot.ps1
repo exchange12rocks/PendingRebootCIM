@@ -201,10 +201,10 @@ function Test-PendingReboot
                 ## Query ComputerName and ActiveComputerName from the registry and setting the MethodName to GetMultiStringValue
                 $invokeWmiMethodParameters.Name = 'GetStringValue'
                 $invokeWmiMethodParameters.ArgumentList = @($hklm, 'SYSTEM\CurrentControlSet\Control\ComputerName\ActiveComputerName\', 'ComputerName')
-                $registryActiveComputerName = Get-CimWmiData @getCimWmiDataParameters
+                $registryActiveComputerName = (Get-CimWmiData @getCimWmiDataParameters).sValue
 
                 $invokeWmiMethodParameters.ArgumentList = @($hklm, 'SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName\', 'ComputerName')
-                $registryComputerName = Get-CimWmiData @getCimWmiDataParameters
+                $registryComputerName = (Get-CimWmiData @getCimWmiDataParameters).sValue
 
                 $pendingComputerRename = $registryActiveComputerName -ne $registryComputerName -or $pendingDomainJoin
 
