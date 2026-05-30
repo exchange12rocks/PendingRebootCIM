@@ -28,11 +28,6 @@ function Get-CimWmiData {
             $invokeWmiMethodParameters.Remove('ArgumentList')
         }
 
-        if ($invokeWmiMethodParameters.ComputerName -in ('.', 'localhost', $env:COMPUTERNAME))
-        {
-            $invokeWmiMethodParameters.Remove('ComputerName')
-        }
-
         Invoke-CimMethod @invokeWmiMethodParameters
     }
 }

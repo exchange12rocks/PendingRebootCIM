@@ -141,24 +141,46 @@ function Test-PendingReboot
         {
             try
             {
+                $getCimWmiDataParameters = @{
+                    Wmi = $Wmi
+                }
                 $invokeWmiMethodParameters = @{
                     Namespace    = 'root/default'
                     Class        = 'StdRegProv'
                     Name         = 'EnumKey'
-                    ComputerName = $computer
                     ErrorAction  = 'Stop'
                 }
-                $getCimWmiDataParameters = @{
-                    Wmi                        = $Wmi
-                    invokeWmiMethodParameters = $invokeWmiMethodParameters
+                if ($PSBoundParameters.ContainsKey('Wmi'))
+                {
+                    $invokeWmiMethodParameters.Add('ComputerName', $computer)
+                    if ($PSBoundParameters.ContainsKey('Credential'))
+                    {
+                        $invokeWmiMethodParameters.Credential = $Credential
+                    }
                 }
+                else {
+                    if ($PSBoundParameters.ContainsKey('Credential'))
+                    {
+                        if ($computer -notin ('.', 'localhost', $env:COMPUTERNAME)) {
+                            $NewCimSessionParameters = @{
+                                ComputerName = $computer
+                            }
+                        }
+                        $NewCimSessionParameters.Add('Credential', $Credential)
+                        $invokeWmiMethodParameters.Add('CimSession', (New-CimSession @NewCimSessionParameters))
+                    }
+                    else
+                    {
+                        if ($computer -notin ('.', 'localhost', $env:COMPUTERNAME))
+                        {
+                            $invokeWmiMethodParameters.Add('ComputerName', $computer)
+                        }
+                    }
+                }
+
+                $getCimWmiDataParameters.Add('invokeWmiMethodParameters', $invokeWmiMethodParameters)
 
                 $hklm = [UInt32] "0x80000002"
-
-                if ($PSBoundParameters.ContainsKey('Credential'))
-                {
-                    $invokeWmiMethodParameters.Credential = $Credential
-                }
 
                 ## Query the Component Based Servicing Reg Key
                 $invokeWmiMethodParameters.ArgumentList = @($hklm, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\')
