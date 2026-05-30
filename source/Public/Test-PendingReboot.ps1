@@ -152,7 +152,7 @@ function Test-PendingReboot
                 }
                 if ($PSBoundParameters.ContainsKey('Wmi'))
                 {
-                    $invokeWmiMethodParameters.Add('ComputerName', $computer)
+                    $invokeWmiMethodParameters.ComputerName = $computer
                     if ($PSBoundParameters.ContainsKey('Credential'))
                     {
                         $invokeWmiMethodParameters.Credential = $Credential
@@ -166,19 +166,19 @@ function Test-PendingReboot
                                 ComputerName = $computer
                             }
                         }
-                        $NewCimSessionParameters.Add('Credential', $Credential)
-                        $invokeWmiMethodParameters.Add('CimSession', (New-CimSession @NewCimSessionParameters))
+                        $NewCimSessionParameters.Credential = $Credential
+                        $invokeWmiMethodParameters.CimSession = (New-CimSession @NewCimSessionParameters)
                     }
                     else
                     {
                         if ($computer -notin ('.', 'localhost', $env:COMPUTERNAME))
                         {
-                            $invokeWmiMethodParameters.Add('ComputerName', $computer)
+                            $invokeWmiMethodParameters.ComputerName = $computer
                         }
                     }
                 }
 
-                $getCimWmiDataParameters.Add('invokeWmiMethodParameters', $invokeWmiMethodParameters)
+                $getCimWmiDataParameters.invokeWmiMethodParameters = $invokeWmiMethodParameters
 
                 $hklm = [UInt32] "0x80000002"
 
