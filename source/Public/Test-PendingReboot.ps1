@@ -161,10 +161,10 @@ function Test-PendingReboot
                 else {
                     if ($PSBoundParameters.ContainsKey('Credential'))
                     {
-                        if ($computer -notin ('.', 'localhost', $env:COMPUTERNAME)) {
-                            $NewCimSessionParameters = @{
-                                ComputerName = $computer
-                            }
+                        $NewCimSessionParameters = @{}
+                        if ($computer -notin ('.', 'localhost', $env:COMPUTERNAME))
+                        {
+                            $NewCimSessionParameters.ComputerName = $computer
                         }
                         $NewCimSessionParameters.Credential = $Credential
                         $CimSession = New-CimSession @NewCimSessionParameters
