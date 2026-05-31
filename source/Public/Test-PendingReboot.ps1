@@ -167,7 +167,8 @@ function Test-PendingReboot
                             }
                         }
                         $NewCimSessionParameters.Credential = $Credential
-                        $invokeWmiMethodParameters.CimSession = (New-CimSession @NewCimSessionParameters)
+                        $CimSession = New-CimSession @NewCimSessionParameters
+                        $invokeWmiMethodParameters.CimSession = $CimSession
                     }
                     else
                     {
@@ -218,6 +219,32 @@ function Test-PendingReboot
                     $registryPendingFileRenameOperationsBool = [bool]$registryPendingFileRenameOperations
                 }
 
+                ## Query Windows Feature install/uninstall
+                $TestPendingWindowsFeatureParameters = @{}
+                if ($CimSession)
+                {
+                    $TestPendingWindowsFeatureParameters.CimSession = $CimSession
+                }
+                else
+                {
+                    if ($PSBoundParameters.ContainsKey('Wmi'))
+                    {
+                        $TestPendingWindowsFeatureParameters.ComputerName = $computer
+                        if ($PSBoundParameters.ContainsKey('Credential'))
+                        {
+                            $TestPendingWindowsFeatureParameters.Credential = $Credential
+                        }
+                    }
+                    else
+                    {
+                        if ($computer -notin ('.', 'localhost', $env:COMPUTERNAME))
+                        {
+                            $TestPendingWindowsFeatureParameters.ComputerName = $computer
+                        }
+                    }
+                }
+                $pendingWindowsFeature = Test-PendingWindowsFeature @TestPendingWindowsFeatureParameters
+
                 ## Query ClientSDK for pending reboot status, unless SkipConfigurationManagerClientCheck is present
                 if (-not $PSBoundParameters.ContainsKey('SkipConfigurationManagerClientCheck'))
                 {
@@ -243,7 +270,8 @@ function Test-PendingReboot
                     $pendingDomainJoin -or `
                     $registryPendingFileRenameOperationsBool -or `
                     $systemCenterConfigManager -or `
-                    $registryWindowsUpdateAutoUpdate
+                    $registryWindowsUpdateAutoUpdate -or `
+                    $pendingWindowsFeature
 
                 if ($PSBoundParameters.ContainsKey('Detailed'))
                 {
@@ -253,6 +281,7 @@ function Test-PendingReboot
                         PendingComputerRenameDomainJoin  = $pendingComputerRename
                         PendingFileRenameOperations      = $registryPendingFileRenameOperationsBool
                         PendingFileRenameOperationsValue = $registryPendingFileRenameOperations
+                        PendingWindowsFeature            = $pendingWindowsFeature
                         SystemCenterConfigManager        = $systemCenterConfigManager
                         WindowsUpdateAutoUpdate          = $registryWindowsUpdateAutoUpdate
                         IsRebootPending                  = $isRebootPending
