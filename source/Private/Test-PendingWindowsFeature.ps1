@@ -2,7 +2,7 @@ function Test-PendingWindowsFeature {
     [CmdletBinding()]
     param
     (
-        [Parameter(ParameterSetName = 'Wmi')]    
+        [Parameter(ParameterSetName = 'Wmi')]
         [Parameter(ParameterSetName = 'CimName')]
         [string]
         $ComputerName,
@@ -41,7 +41,8 @@ function Test-PendingWindowsFeature {
         }
         Get-WmiObject @GetCallParameters
     }
-    else {
+    else
+    {
         if ($PSBoundParameters.ContainsKey('CimSession'))
         {
             $GetCallParameters.CimSession = $CimSession
