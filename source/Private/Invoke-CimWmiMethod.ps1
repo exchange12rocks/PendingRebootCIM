@@ -11,7 +11,7 @@ function Invoke-CimWmiMethod {
         $Wmi
     )
 
-    if ($PSBoundParameters.ContainsKey('Wmi'))
+    if ($Wmi)
     {
         Invoke-WmiMethod @invokeWmiMethodParameters
     }
