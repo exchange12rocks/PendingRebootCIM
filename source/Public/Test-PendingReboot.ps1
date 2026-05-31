@@ -306,7 +306,7 @@ function Test-PendingReboot
                     }
 
                     if ($null -ne $pendingLCMState) {
-                        Result.LCMState = $pendingLCMState
+                        $Result.LCMState = $pendingLCMState
                     }
                 }
                 [PSCustomObject]$Result
