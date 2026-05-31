@@ -150,7 +150,7 @@ function Test-PendingReboot
                     Name         = 'EnumKey'
                     ErrorAction  = 'Stop'
                 }
-                if ($PSBoundParameters.ContainsKey('Wmi'))
+                if ($Wmi)
                 {
                     $invokeWmiMethodParameters.ComputerName = $computer
                     if ($PSBoundParameters.ContainsKey('Credential'))
@@ -210,7 +210,7 @@ function Test-PendingReboot
                 $pendingComputerRename = $registryActiveComputerName -ne $registryComputerName -or $pendingDomainJoin
 
                 ## Query PendingFileRenameOperations from the registry
-                if (-not $PSBoundParameters.ContainsKey('SkipPendingFileRenameOperationsCheck'))
+                if (-not $SkipPendingFileRenameOperationsCheck)
                 {
                     $invokeWmiMethodParameters.Name = 'GetMultiStringValue'
                     $invokeWmiMethodParameters.ArgumentList = @($hklm, 'SYSTEM\CurrentControlSet\Control\Session Manager\', 'PendingFileRenameOperations')
@@ -261,7 +261,7 @@ function Test-PendingReboot
                 }
 
                 ## Query ClientSDK for pending reboot status, unless SkipConfigurationManagerClientCheck is present
-                if (-not $PSBoundParameters.ContainsKey('SkipConfigurationManagerClientCheck'))
+                if (-not $SkipConfigurationManagerClientCheck)
                 {
                     $invokeWmiMethodParameters.NameSpace = 'ROOT\ccm\ClientSDK'
                     $invokeWmiMethodParameters.Class = 'CCM_ClientUtilities'
@@ -293,7 +293,7 @@ function Test-PendingReboot
                     ComputerName    = $computer
                     IsRebootPending = $isRebootPending
                 }
-                if ($PSBoundParameters.ContainsKey('Detailed'))
+                if ($Detailed)
                 {
                     $Result += @{
                         ComponentBasedServicing          = $registryComponentBasedServicing
