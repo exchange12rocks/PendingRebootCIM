@@ -245,6 +245,21 @@ function Test-PendingReboot
                 }
                 $pendingWindowsFeature = Test-PendingWindowsFeature @TestPendingWindowsFeatureParameters
 
+                ## Query Local Configuration Manager state for a pending reboot flag
+                $pendingLCMState = $null
+                if (-not $Wmi)
+                {
+                    $TestLCMStateParameters = @{}
+                    if ($CimSession)
+                    {
+                        $TestLCMStateParameters.CimSession = $CimSession
+                    }
+                    else {
+                        $TestLCMStateParameters.ComputerName = $computer
+                    }
+                    $pendingLCMState = Test-LCMState @TestLCMStateParameters
+                }
+
                 ## Query ClientSDK for pending reboot status, unless SkipConfigurationManagerClientCheck is present
                 if (-not $PSBoundParameters.ContainsKey('SkipConfigurationManagerClientCheck'))
                 {
@@ -271,12 +286,16 @@ function Test-PendingReboot
                     $registryPendingFileRenameOperationsBool -or `
                     $systemCenterConfigManager -or `
                     $registryWindowsUpdateAutoUpdate -or `
-                    $pendingWindowsFeature
+                    $pendingWindowsFeature -or `
+                    $pendingLCMState
 
+                $Result = @{
+                    ComputerName    = $computer
+                    IsRebootPending = $isRebootPending
+                }
                 if ($PSBoundParameters.ContainsKey('Detailed'))
                 {
-                    [PSCustomObject]@{
-                        ComputerName                     = $computer
+                    $Result += @{
                         ComponentBasedServicing          = $registryComponentBasedServicing
                         PendingComputerRenameDomainJoin  = $pendingComputerRename
                         PendingFileRenameOperations      = $registryPendingFileRenameOperationsBool
@@ -284,16 +303,13 @@ function Test-PendingReboot
                         PendingWindowsFeature            = $pendingWindowsFeature
                         SystemCenterConfigManager        = $systemCenterConfigManager
                         WindowsUpdateAutoUpdate          = $registryWindowsUpdateAutoUpdate
-                        IsRebootPending                  = $isRebootPending
+                    }
+
+                    if ($null -ne $pendingLCMState) {
+                        Result.LCMState = $pendingLCMState
                     }
                 }
-                else
-                {
-                    [PSCustomObject]@{
-                        ComputerName    = $computer
-                        IsRebootPending = $isRebootPending
-                    }
-                }
+                [PSCustomObject]$Result
             }
 
             catch
