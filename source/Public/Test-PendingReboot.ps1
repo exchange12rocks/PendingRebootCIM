@@ -219,6 +219,19 @@ function Test-PendingReboot
                     $registryPendingFileRenameOperationsBool = [bool]$registryPendingFileRenameOperations
                 }
 
+                ## Query UpdateExeVolatile from the registry
+                $invokeWmiMethodParameters.Name = 'GetDWORDValue'
+                $invokeWmiMethodParameters.ArgumentList = @($hklm, 'SOFTWARE\Microsoft\Updates', 'UpdateExeVolatile')
+                $UpdateExeVolatileValue = (Invoke-CimWmiMethod @invokeCimWmiMethodParameters).uValue
+                $UpdateExeVolatile = if ($null -ne $UpdateExeVolatileValue -and $UpdateExeVolatileValue -ne 0)
+                {
+                    $true
+                }
+                else
+                {
+                    $false
+                }
+
                 ## Query Windows Feature install/uninstall
                 $TestPendingWindowsFeatureParameters = @{}
                 if ($CimSession)
@@ -284,6 +297,7 @@ function Test-PendingReboot
                     $pendingComputerRename -or `
                     $pendingDomainJoin -or `
                     $registryPendingFileRenameOperationsBool -or `
+                    $UpdateExeVolatile -or `
                     $systemCenterConfigManager -or `
                     $registryWindowsUpdateAutoUpdate -or `
                     $pendingWindowsFeature -or `
@@ -300,6 +314,8 @@ function Test-PendingReboot
                         PendingComputerRenameDomainJoin  = $pendingComputerRename
                         PendingFileRenameOperations      = $registryPendingFileRenameOperationsBool
                         PendingFileRenameOperationsValue = $registryPendingFileRenameOperations
+                        UpdateExeVolatile                = $UpdateExeVolatile
+                        UpdateExeVolatileValue           = $UpdateExeVolatileValue
                         PendingWindowsFeature            = $pendingWindowsFeature
                         SystemCenterConfigManager        = $systemCenterConfigManager
                         WindowsUpdateAutoUpdate          = $registryWindowsUpdateAutoUpdate

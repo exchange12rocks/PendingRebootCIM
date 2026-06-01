@@ -22,7 +22,7 @@ function Invoke-CimWmiMethod {
                 hDefKey     = $invokeWmiMethodParameters.ArgumentList[0]
                 sSubKeyName = $invokeWmiMethodParameters.ArgumentList[1]
             }
-            if ($invokeWmiMethodParameters.Name -in ('GetStringValue', 'GetMultiStringValue'))
+            if ($invokeWmiMethodParameters.Name -in ('GetStringValue', 'GetDWORDValue', 'GetMultiStringValue'))
             {
                 $invokeWmiMethodParameters.Arguments.sValueName = $invokeWmiMethodParameters.ArgumentList[2]
             }
